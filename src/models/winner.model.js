@@ -7,6 +7,10 @@ const winnerSchema = new Schema(
             ref : "User",
             required : true
         },
+        level : {
+            type : Number,
+            required : true
+        },
         timeOfCompletion : {
             type : Number,
             required : true
