@@ -5,10 +5,9 @@ const userSchema = new Schema({
         type : String,
         required : true
     },
-    isGameOver : {
-        type : Boolean,
-        required : true,
-        default : false
+    password: {
+        type: String,
+        required: [true, 'Password is required']
     }
 })
 

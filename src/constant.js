@@ -1,1 +1,1 @@
-export const DB_NAME = "clubHouse"
+export const DB_NAME = "Where's-Waldo"

@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const winnerSchema = new Schema(
+const userStatusSchema = new Schema(
     {
         user : {
             type : Schema.Types.ObjectId,
@@ -9,7 +9,15 @@ const winnerSchema = new Schema(
         },
         level : {
             type : Number,
+        },
+        charactersFound : {
+            type : Array,
             required : true
+        },
+        isOver : {
+            type : Boolean,
+            required : true,
+            default : false
         },
         timeOfCompletion : {
             type : Number,
@@ -19,4 +27,4 @@ const winnerSchema = new Schema(
 )
 
 
-export default Winner = mongoose.model("Winner", winnerSchema);
+export default UserStatus = mongoose.model("UserStatus", userStatusSchema);
