@@ -1,8 +1,8 @@
-import asyncHandler from "../utils/asyncHandler";
+import asyncHandler from "../utils/asyncHandler.js";
 import { validationResult } from "express-validator";
 import bcrypt from 'bcryptjs'
-import userModel from "../models/user.model";
-import passport from "../middleware/passport/passport";
+import userModel from "../models/user.model.js";
+import passport from "../middleware/passport/passport.js"
 
 
 
@@ -13,8 +13,10 @@ const signUpPost = asyncHandler(
       if(errors.isEmpty()){
         try {
           const { username, password } = req.body;
+          console.log("userName : ", username);
+          console.log("PassWord : ", password);
            // Check if username already exists
-           const existingUser = await User.findOne({ username });
+           const existingUser = await userModel.findOne({ username });
            if (existingUser) {
              return res.status(400).json({ message: "Username already exists" });
            }
@@ -23,13 +25,9 @@ const signUpPost = asyncHandler(
             if(err){
               throw err;
             } else {
-              const memCode = generateMemberString();
                const user = new userModel({
                   username : username,
-                  password: hashedPassword,
-                  member : false,
-                  admin : true,
-                  memberCode : memCode
+                  password: hashedPassword
               });
               await user.save();
             }
@@ -37,10 +35,10 @@ const signUpPost = asyncHandler(
       
           res.status(201).json({ message : "User created Succesfully" });
         } catch(err) {
-          res.status(500).json({ message: "Server error" });
+          res.status(500).json({ message: "Server error in catch" });
         }
       } else {
-        res.render("errPage", { errors : errors.array() , user : req.user});
+        res.status(500).json({ message : "server error" })
       }
     }
   
@@ -52,8 +50,10 @@ const signUpPost = asyncHandler(
 
 const login_middleware = passport.authenticate("local")
 const login_controller = (req , res) => {
- if(req){
+  console.log(req.body);
+ if(req.user){
     res.status(201).json({ message : "login successful" })
+    console.log(req.user);
  } else {
     res.status(400).json({ message :  "couldn't login user"})
  }
@@ -70,5 +70,15 @@ const logout = (req, res, next) => {
         return next(err);
     }
     res.status(201).json({ message : "User successfully logged out" });
+    console.log(req.user);
     });
+}
+
+
+export {
+  signUpPost,
+  login_controller,
+  login_middleware,
+  logout,
+  bcrypt
 }
