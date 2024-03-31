@@ -6,19 +6,19 @@ function isPointInsideCircularDiv( divTop, divLeft, radius, character) {
     let pointY;
     //check character
     switch(character){
-        case "waldo" : 
+        case "WALDO" : 
             pointX = 900;
             pointY = 350;
             break
-        case "wizard" : 
+        case "WIZARD" : 
             pointX = 395;
             pointY = 330;
             break
-        case "odlaw" :
+        case "ODLAW" :
             pointX = 158;
             pointY = 333;
             break
-        case "wenda" :
+        case "WENDA" :
             pointX = 1124;
             pointY = 380;
             break
@@ -38,14 +38,18 @@ function isPointInsideCircularDiv( divTop, divLeft, radius, character) {
 
 const isCharacterFound = asyncHandler(
     async(req, res) => {
+        console.log(req.body);
         const { divTop, divLeft, radius, character } = req.body;
         try {
             const user = req.user;
             console.log(" USER : ", user);
-            const userStatus = await userStatusModel.findOne({ user : user._id });
+            let userStatus = await userStatusModel.findOne({ user : user._id });
+            if(!user){
+                res.status(500).json({ message : "User not valid"})
+            }
 
             if(!userStatus){
-                return res.status(404).json({ error : "user not valid" });
+                userStatus = new userStatusModel({ user: user._id, charactersFound: [], isOver : false });
             }
 
             const isCorrect = isPointInsideCircularDiv(divTop, divLeft, radius, character)

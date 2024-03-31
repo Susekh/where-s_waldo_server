@@ -12,7 +12,6 @@ const userStatusSchema = new Schema(
         },
         charactersFound : {
             type : Array,
-            required : true
         },
         isOver : {
             type : Boolean,
@@ -21,7 +20,6 @@ const userStatusSchema = new Schema(
         },
         timeOfCompletion : {
             type : Number,
-            required : true
         }
     }
 )

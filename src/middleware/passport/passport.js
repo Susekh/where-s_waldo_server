@@ -1,13 +1,13 @@
 import passport from "passport";
 import LocalStrategy from "passport-local"
-import User from "../../models/user.model.js"
+import userModel from "../../models/user.model.js"
 import { bcrypt } from "../../controller/auth.controller.js";
 
 
 passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        const user = await User.findOne({ username: username });
+        const user = await userModel.findOne({ username: username });
         if (!user) {
           return done(null, false, { message: "Incorrect username" });
         }
@@ -25,12 +25,12 @@ passport.use(
   
   
   passport.serializeUser((user, done) => {
-    done(null, user.id);
+    done(null, user._id);
   });
   
-  passport.deserializeUser(async (id, done) => {
+  passport.deserializeUser(async (_id, done) => {
     try {
-      const user = await User.findById(id);
+      const user = await userModel.findById(_id);
       done(null, user);
     } catch(err) {
       done(err);

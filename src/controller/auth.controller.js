@@ -2,8 +2,24 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { validationResult } from "express-validator";
 import bcrypt from 'bcryptjs'
 import userModel from "../models/user.model.js";
-import passport from "../middleware/passport/passport.js"
 
+
+const generateAccessAndRefereshTokens = async(userId) =>{
+  try {
+      const user = await userModel.findById(userId)
+      const accessToken = user.generateAccessToken()
+      const refreshToken = user.generateRefreshToken()
+
+      user.refreshToken = refreshToken
+      await user.save({ validateBeforeSave: false })
+
+      return {accessToken, refreshToken}
+
+
+  } catch (error) {
+      console.log(error);
+  }
+}
 
 
 const signUpPost = asyncHandler(
@@ -48,37 +64,96 @@ const signUpPost = asyncHandler(
 
 //login part
 
-const login_middleware = passport.authenticate("local")
-const login_controller = (req , res) => {
-  console.log(req.body);
- if(req.user){
-    res.status(201).json({ message : "login successful" })
-    console.log(req.user);
- } else {
-    res.status(400).json({ message :  "couldn't login user"})
- }
+
+const loginUser = asyncHandler(async (req, res) =>{
+  // req body -> data
+  // username or email
+  //find the user
+  //password check
+  //access and referesh token
+  //send cookie
+
+  const {username, password} = req.body
+
+  if (!username) {
+      return res.status(400).json({ message : "username is required" });
+  }
+  
+  // Here is an alternative of above code based on logic discussed in video:
+  // if (!(username || email)) {
+  //     throw new ApiError(400, "username or email is required")
+      
+  // }
+
+  const user = await userModel.findOne({username})
+
+  if (!user) {
+      res.status(401).json( { message : "user not valid" } )
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+
+ if (!isPasswordValid) {
+  res.status(401).json({ message : "Invalid user credentials" });
 }
+
+ const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+  console.log("Access Token : ",accessToken);
+  console.log("Refresh Token : ",refreshToken);
+  const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken")
+
+  const options = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+  }
+
+  res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json({message : "User logged In Successfully", user : loggedInUser})
+
+})
+
 
 
 
 
 //logout part
 
-const logout = (req, res, next) => {
-    req.logout((err) => {
-    if (err) {
-        return next(err);
-    }
-    res.status(201).json({ message : "User successfully logged out" });
-    console.log(req.user);
-    });
-}
+const logout = asyncHandler(async(req, res) => {
+  console.log( "User :", req.user);
+  await userModel.findByIdAndUpdate(
+      req.user._id,
+      {
+          $unset: {
+              refreshToken: 1 // this removes the field from document
+          }
+      },
+      {
+          new: true
+      }
+  )
+
+  const options = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+  }
+
+  return res
+  .status(200)
+  .clearCookie("accessToken", options)
+  .clearCookie("refreshToken", options)
+  .json({message : "User logged Out"})
+})
 
 
 export {
   signUpPost,
-  login_controller,
-  login_middleware,
+  loginUser,
   logout,
   bcrypt
 }
