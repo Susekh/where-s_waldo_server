@@ -38,15 +38,15 @@ function isPointInsideCircularDiv( divTop, divLeft, radius, character) {
 
 const isCharacterFound = asyncHandler(
     async(req, res) => {
-        console.log(req.body);
-        const { divTop, divLeft, radius, character } = req.body;
+        const { divTop, divLeft, radius, character, currentTime } = req.body;
         try {
             const user = req.user;
-            console.log(" USER : ", user);
-            let userStatus = await userStatusModel.findOne({ user : user._id });
+            
             if(!user){
                 res.status(500).json({ message : "User not valid"})
             }
+            
+            let userStatus = await userStatusModel.findOne({ user : user._id });
 
             if(!userStatus){
                 userStatus = new userStatusModel({ user: user._id, charactersFound: [], isOver : false });
@@ -56,6 +56,7 @@ const isCharacterFound = asyncHandler(
 
             if(userStatus.charactersFound.length >= 4){
                 userStatus.isOver = true;
+                userStatus.timeOfCompletion = currentTime;
             } else if(isCorrect) {
                 userStatus.charactersFound.push(character);
             }
@@ -63,8 +64,8 @@ const isCharacterFound = asyncHandler(
 
             res.json({ correct :  isCorrect, charactersFound : userStatus.charactersFound, isOver : userStatus.isOver });
         } catch (error) {
-            console.error("Error occured while verifying character : ", error);
-            res.status(500).json({ error : "Internal server error"});
+            console.error("Error occured while verifying character :: ", error);
+            res.status(500).json({ error : "Internal server error", message : error});
         }
     }
 )

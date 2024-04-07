@@ -73,29 +73,23 @@ const loginUser = asyncHandler(async (req, res) =>{
   //access and referesh token
   //send cookie
 
-  const {username, password} = req.body
+  const {username, password} = req.body;
 
   if (!username) {
       return res.status(400).json({ message : "username is required" });
   }
-  
-  // Here is an alternative of above code based on logic discussed in video:
-  // if (!(username || email)) {
-  //     throw new ApiError(400, "username or email is required")
-      
-  // }
 
   const user = await userModel.findOne({username})
 
   if (!user) {
-      res.status(401).json( { message : "user not valid" } )
+      return res.status(400).json( { message : "user not found" } )
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
 
  if (!isPasswordValid) {
-  res.status(401).json({ message : "Invalid user credentials" });
+  res.status(400).json({ message : "Password is incorrect" });
 }
 
  const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)

@@ -8,10 +8,10 @@ const userStatusSchema = new Schema(
             required : true
         },
         level : {
-            type : Number,
+            type : Number
         },
         charactersFound : {
-            type : Array,
+            type : Array
         },
         isOver : {
             type : Boolean,
@@ -19,7 +19,10 @@ const userStatusSchema = new Schema(
             default : false
         },
         timeOfCompletion : {
-            type : Number,
+            type : Number
+        },
+        prevScore : {
+            type : Number
         }
     }
 )
