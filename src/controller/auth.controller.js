@@ -2,9 +2,10 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { validationResult } from "express-validator";
 import bcrypt from 'bcryptjs'
 import userModel from "../models/user.model.js";
+import { error } from "console";
 
 
-const generateAccessAndRefereshTokens = async(userId) =>{
+const generateAccessAndRefereshTokens = async(userId, res) =>{
   try {
       const user = await userModel.findById(userId)
       const accessToken = user.generateAccessToken()
@@ -17,7 +18,7 @@ const generateAccessAndRefereshTokens = async(userId) =>{
 
 
   } catch (error) {
-      console.log(error);
+      res.status(500).json({ error : "Unable to Login User", message : error.message });
   }
 }
 
@@ -51,7 +52,7 @@ const signUpPost = asyncHandler(
       
           res.status(201).json({ message : "User created Succesfully" });
         } catch(err) {
-          res.status(500).json({ message: "Server error in catch" });
+          res.status(500).json({ message: "Unable to create User" });
         }
       } else {
         res.status(500).json({ message : "server error" })
@@ -76,23 +77,25 @@ const loginUser = asyncHandler(async (req, res) =>{
   const {username, password} = req.body;
 
   if (!username) {
-      return res.status(400).json({ message : "username is required" });
+      return res.status(400).json({ error : "username is required" });
   }
 
   const user = await userModel.findOne({username})
 
   if (!user) {
-      return res.status(400).json( { message : "user not found" } )
+      return res.status(400).json( { error : "user not found" } )
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
 
  if (!isPasswordValid) {
-  res.status(400).json({ message : "Password is incorrect" });
+  res.status(401).json({ error : "Password is incorrect" });
 }
 
- const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+ const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id, res)
+ 
+
   console.log("Access Token : ",accessToken);
   console.log("Refresh Token : ",refreshToken);
   const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken")

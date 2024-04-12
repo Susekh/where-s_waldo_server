@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser"
 import helmet from "helmet"
 import { rateLimit } from 'express-rate-limit'
 import ExpressMongoSanitize from "express-mongo-sanitize"
+import leaderBoardRouter from "./routes/leaderBoard.route.js"
 
 const app = Express();
 
@@ -38,5 +39,6 @@ app.get("/", (req, res) => {
 })
 app.use("/gameLogics", gameLogicsRoute);
 app.use("/auth", userRouter);
+app.use("/", leaderBoardRouter);
 
 export {app}
