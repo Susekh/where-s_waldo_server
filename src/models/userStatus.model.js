@@ -19,7 +19,8 @@ const userStatusSchema = new Schema(
             default : false
         },
         timeOfCompletion : {
-            type : Number
+            type : Number,
+            default : 0
         },
         prevScore : {
             type : Number

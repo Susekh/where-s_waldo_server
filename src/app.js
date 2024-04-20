@@ -1,5 +1,5 @@
 import Express from "express"
-import gameLogicsRoute from "./routes/isFound.route.js"
+import gameLogicsRoute from "./routes/gamelogics.route.js"
 import userRouter from "./routes/auth.route.js"
 import cors from 'cors'
 import cookieParser from "cookie-parser"
@@ -7,8 +7,12 @@ import helmet from "helmet"
 import { rateLimit } from 'express-rate-limit'
 import ExpressMongoSanitize from "express-mongo-sanitize"
 import leaderBoardRouter from "./routes/leaderBoard.route.js"
+import dotenv from 'dotenv';
+
 
 const app = Express();
+
+
 
 
 const limiter = rateLimit({
@@ -17,6 +21,8 @@ const limiter = rateLimit({
 	message : "Too many requests from this IP, please try again in an Hour"
 });
 
+
+dotenv.config();
 
 // Middlewares
 app.use(ExpressMongoSanitize());

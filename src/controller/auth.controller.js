@@ -2,7 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { validationResult } from "express-validator";
 import bcrypt from 'bcryptjs'
 import userModel from "../models/user.model.js";
-import { error } from "console";
+import UserStatusModel from "../models/userStatus.model.js";
 
 
 const generateAccessAndRefereshTokens = async(userId, res) =>{
@@ -30,12 +30,20 @@ const signUpPost = asyncHandler(
       if(errors.isEmpty()){
         try {
           const { username, password } = req.body;
-          console.log("userName : ", username);
-          console.log("PassWord : ", password);
+
+          if (!username) {
+            return res.status(400).json({ error : "Username is required" });
+        }
+      
+        if(!password) {
+          return res.status(400).json({ error : "Password is required" });
+        }
+        
+
            // Check if username already exists
            const existingUser = await userModel.findOne({ username });
            if (existingUser) {
-             return res.status(400).json({ message: "Username already exists" });
+             return res.status(400).json({ error: "Username already exists" });
            }
       
           bcrypt.hash(password, 10, async(err, hashedPassword) => {
@@ -52,10 +60,10 @@ const signUpPost = asyncHandler(
       
           res.status(201).json({ message : "User created Succesfully" });
         } catch(err) {
-          res.status(500).json({ message: "Unable to create User" });
+          res.status(500).json({ error: "Unable to create User" });
         }
       } else {
-        res.status(500).json({ message : "server error" })
+        res.status(500).json({ error : "server error" });
       }
     }
   
@@ -77,7 +85,11 @@ const loginUser = asyncHandler(async (req, res) =>{
   const {username, password} = req.body;
 
   if (!username) {
-      return res.status(400).json({ error : "username is required" });
+      return res.status(400).json({ error : "Username is required" });
+  }
+
+  if(!password) {
+    return res.status(400).json({ error : "Password is required" });
   }
 
   const user = await userModel.findOne({username})
@@ -96,9 +108,9 @@ const loginUser = asyncHandler(async (req, res) =>{
  const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id, res)
  
 
-  console.log("Access Token : ",accessToken);
-  console.log("Refresh Token : ",refreshToken);
   const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken")
+  const charArr = await UserStatusModel.findOne({ user : user._id}).select("charactersFound").lean();
+
 
   const options = {
       httpOnly: true,
@@ -110,7 +122,7 @@ const loginUser = asyncHandler(async (req, res) =>{
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json({message : "User logged In Successfully", user : loggedInUser})
+    .json({message : "User logged In Successfully", user : loggedInUser, charArr : charArr.charactersFound})
 
 })
 
@@ -121,7 +133,6 @@ const loginUser = asyncHandler(async (req, res) =>{
 //logout part
 
 const logout = asyncHandler(async(req, res) => {
-  console.log( "User :", req.user);
   await userModel.findByIdAndUpdate(
       req.user._id,
       {

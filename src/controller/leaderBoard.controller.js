@@ -11,7 +11,8 @@ const leaderboardController = asyncHandler(
                                              .populate('user', 'username'); 
       
           // Prepare the response data
-          const leaderboardData = leaderboard.map(userStatus => ({
+          const leaderboardData = leaderboard.map((userStatus, index) => ({
+                key : index + 1,
                 username: userStatus.user.username,
                 timeOfCompletion: userStatus.timeOfCompletion
             }));

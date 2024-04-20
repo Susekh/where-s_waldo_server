@@ -6,7 +6,7 @@ function isPointInsideCircularDiv( divTop, divLeft, radius, character) {
     let pointY;
     //check character
     switch(character){
-        case "WALDO" : 
+        case "WALDO" :
             pointX = 900;
             pointY = 350;
             break
@@ -38,7 +38,7 @@ function isPointInsideCircularDiv( divTop, divLeft, radius, character) {
 
 const isCharacterFound = asyncHandler(
     async(req, res) => {
-        const { divTop, divLeft, radius, character, currentTime } = req.body;
+        const { divTop, divLeft, radius, character, timeTaken } = req.body;
         try {
             const user = req.user;
             
@@ -49,20 +49,37 @@ const isCharacterFound = asyncHandler(
             let userStatus = await userStatusModel.findOne({ user : user._id });
 
             if(!userStatus){
-                userStatus = new userStatusModel({ user: user._id, charactersFound: [], isOver : false });
+                userStatus = new userStatusModel({ 
+                user: user._id, 
+                charactersFound: [], 
+                isOver : false});
             }
 
             const isCorrect = isPointInsideCircularDiv(divTop, divLeft, radius, character)
+            const IsCharInside = userStatus.charactersFound.includes(character);
 
+
+            
+            
             if(userStatus.charactersFound.length >= 4){
                 userStatus.isOver = true;
-                userStatus.timeOfCompletion = currentTime;
-            } else if(isCorrect) {
+                userStatus.timeOfCompletion = timeTaken;
+            } else if(isCorrect && !IsCharInside) {
                 userStatus.charactersFound.push(character);
+                if(userStatus.charactersFound.length === 4){
+                    userStatus.isOver = true;
+                }
             }
+            
+            userStatus.timeOfCompletion = timeTaken;
+
             await userStatus.save();
 
-            res.json({ correct :  isCorrect, charactersFound : userStatus.charactersFound, isOver : userStatus.isOver });
+            res.status(200).json({ 
+            correct :  isCorrect, 
+            character : character,
+            charactersFound : userStatus.charactersFound, 
+            isOver : userStatus.isOver,  });
         } catch (error) {
             console.error("Error occured while verifying character :: ", error);
             res.status(500).json({ error : "Internal server error", message : error});
@@ -71,5 +88,40 @@ const isCharacterFound = asyncHandler(
 )
 
 
+const restartGame = asyncHandler(async(req, res) => {
+    try {
+        const user = req.user;
+        if(!user){
+            res.status(500).json({ message : "User not valid"})
+        }
+    
+        let userStatus = await userStatusModel.findOne({ user : user._id });
 
-export { isCharacterFound }
+        userStatus.isOver = false;
+        userStatus.charactersFound = [];
+        userStatus.prevScore = userStatus.timeOfCompletion;
+        userStatus.timeOfCompletion = 0;
+       
+    
+        await userStatus.save();
+
+        console.log("After Saving : ", userStatus);
+        res.status(200).json({ message : "userStatus updated to restart the game", prevScore : prevScore })
+    } catch (error) {
+        res.status(500).json({ error : "Error occured while restarting game", message : error})
+    }
+})
+
+const provideCharArr = asyncHandler(async(req, res) => {
+    try {
+        const user = req.user;
+        const charArr = await userStatusModel.findOne({ user : user._id}).select("charactersFound timeOfCompletion").lean();
+        
+        res.status(200).json({ charArr : charArr.charactersFound, time : charArr.timeOfCompletion});
+    } catch (error) {
+        res.status(500).json({ error : "Can not Fetch charArr" });
+    }
+})
+
+
+export { isCharacterFound, restartGame, provideCharArr }
