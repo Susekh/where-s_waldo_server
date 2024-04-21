@@ -111,7 +111,7 @@ const loginUser = asyncHandler(async (req, res) => {
   // Check if userStatus exists for the logged-in user
   const userStatus = await UserStatusModel.findOne({ user: user._id }).select("charactersFound").lean();
 
-  const charArr = userStatus ? userStatus.charactersFound : null;
+  const charArr = userStatus ? userStatus.charactersFound : [];
 
   const options = {
     httpOnly: true,
