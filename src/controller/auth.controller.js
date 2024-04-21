@@ -84,7 +84,6 @@ const loginUser = asyncHandler(async (req, res) => {
 
   try {
     const { username, password } = req.body;
-    console.log(req.body);
     if (!username) {
       return res.status(400).json({ error: "Username is required" });
     }
