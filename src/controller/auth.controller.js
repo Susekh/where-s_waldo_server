@@ -82,48 +82,61 @@ const loginUser = asyncHandler(async (req, res) => {
   // access and refresh token
   // send cookie
 
-  const { username, password } = req.body;
-  console.log(req.body);
-  if (!username) {
-    return res.status(400).json({ error: "Username is required" });
+  try {
+    const { username, password } = req.body;
+    console.log(req.body);
+    if (!username) {
+      return res.status(400).json({ error: "Username is required" });
+    }
+  
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+  
+    const user = await userModel.findOne({ username });
+  
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
+  
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+  
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Password is incorrect" });
+    }
+  
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id, res);
+  
+    const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken");
+  
+    // Check if userStatus exists for the logged-in user
+      let userStatus = await UserStatusModel.findOne({ user: user._id });
+      if(!userStatus){
+        userStatus = new UserStatusModel({ 
+          user: user._id, 
+          charactersFound: [], 
+          timeOfCompletion : 0,
+          isOver : false});
+      }
+    
+      await userStatus.save();
+
+    const charArr = userStatus && userStatus.charactersFound ? userStatus.charactersFound : [];
+  
+    const options = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    };
+  
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json({ message: "User logged In Successfully", user: loggedInUser, charArr : charArr });
+  } catch (error) {
+    res.status(400).json({ message : "unable to login user" })
   }
-
-  if (!password) {
-    return res.status(400).json({ error: "Password is required" });
-  }
-
-  const user = await userModel.findOne({ username });
-
-  if (!user) {
-    return res.status(400).json({ error: "User not found" });
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    return res.status(401).json({ error: "Password is incorrect" });
-  }
-
-  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id, res);
-
-  const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken");
-
-  // Check if userStatus exists for the logged-in user
-  const userStatus = await UserStatusModel.findOne({ user: user._id }).select("charactersFound").lean();
-
-  const charArr = userStatus ? userStatus.charactersFound : [];
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-  };
-
-  res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json({ message: "User logged In Successfully", user: loggedInUser, charArr });
 });
 
 

@@ -52,6 +52,7 @@ const isCharacterFound = asyncHandler(
                 userStatus = new userStatusModel({ 
                 user: user._id, 
                 charactersFound: [], 
+                timeOfCompletion : 0,
                 isOver : false});
             }
 
@@ -113,7 +114,16 @@ const restartGame = asyncHandler(async(req, res) => {
 const provideCharArr = asyncHandler(async(req, res) => {
     try {
         const user = req.user;
-        const charArr = await userStatusModel.findOne({ user : user._id}).select("charactersFound timeOfCompletion").lean();
+        const userStatus = await userStatusModel.findOne({ user: user._id })
+
+        let charArr;
+
+        if (userStatus) {
+            charArr = userStatus;
+        } else {
+            // If userStatus is null, provide default values
+            charArr = { charactersFound: [], timeOfCompletion: 0 };
+        }
 
         res.status(200).json({ charArr : charArr.charactersFound, time : charArr.timeOfCompletion});
     } catch (error) {
