@@ -1,6 +1,6 @@
 # Where's Waldo Puzzle Game Backend Server
 Welcome to the Where's Waldo Puzzle Game Backend Server repository! This project provides the backend logic and RESTful API for the Where's Waldo puzzle game app, ensuring security and smooth gameplay for users.
-### [Play NOW!](https://where-is-waldo-5o4.pages.dev/)
+### [PLAY NOW!](https://where-is-waldo-5o4.pages.dev/)
 
 ## Overview
 This backend server is built using Node.js with Express and Mongoose, providing a robust foundation for handling game data and user interactions. By implementing most of the game logic on the backend, the server ensures security and prevents unauthorized modifications from the client side.
