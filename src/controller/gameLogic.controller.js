@@ -81,7 +81,6 @@ const isCharacterFound = asyncHandler(
             charactersFound : userStatus.charactersFound, 
             isOver : userStatus.isOver,  });
         } catch (error) {
-            console.error("Error occured while verifying character :: ", error);
             res.status(500).json({ error : "Internal server error", message : error});
         }
     }
@@ -105,7 +104,6 @@ const restartGame = asyncHandler(async(req, res) => {
     
         await userStatus.save();
 
-        console.log("After Saving : ", userStatus);
         res.status(200).json({ message : "userStatus updated to restart the game", prevScore : prevScore })
     } catch (error) {
         res.status(500).json({ error : "Error occured while restarting game", message : error})
@@ -116,7 +114,7 @@ const provideCharArr = asyncHandler(async(req, res) => {
     try {
         const user = req.user;
         const charArr = await userStatusModel.findOne({ user : user._id}).select("charactersFound timeOfCompletion").lean();
-        
+
         res.status(200).json({ charArr : charArr.charactersFound, time : charArr.timeOfCompletion});
     } catch (error) {
         res.status(500).json({ error : "Can not Fetch charArr" });

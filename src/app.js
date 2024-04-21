@@ -33,6 +33,7 @@ app.use(cookieParser());
 
 
 //routes
+app.get("/test", (req, res) => {res.send("Hello world!")})
 app.use("/gameLogics", gameLogicsRoute);
 app.use("/auth", userRouter);
 app.use("/", leaderBoardRouter);
