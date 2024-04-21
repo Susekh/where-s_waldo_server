@@ -74,57 +74,58 @@ const signUpPost = asyncHandler(
 //login part
 
 
-const loginUser = asyncHandler(async (req, res) =>{
+const loginUser = asyncHandler(async (req, res) => {
   // req body -> data
   // username or email
-  //find the user
-  //password check
-  //access and referesh token
-  //send cookie
+  // find the user
+  // password check
+  // access and refresh token
+  // send cookie
 
-  const {username, password} = req.body;
+  const { username, password } = req.body;
   console.log(req.body);
   if (!username) {
-      return res.status(400).json({ error : "Username is required" });
+    return res.status(400).json({ error: "Username is required" });
   }
 
-  if(!password) {
-    return res.status(400).json({ error : "Password is required" });
+  if (!password) {
+    return res.status(400).json({ error: "Password is required" });
   }
 
-  const user = await userModel.findOne({username})
+  const user = await userModel.findOne({ username });
 
   if (!user) {
-      return res.status(400).json( { error : "user not found" } )
+    return res.status(400).json({ error: "User not found" });
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: "Password is incorrect" });
+  }
 
- if (!isPasswordValid) {
-  res.status(401).json({ error : "Password is incorrect" });
-}
+  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id, res);
 
- const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id, res)
- 
+  const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken");
 
-  const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken")
-  const charArr = await UserStatusModel.findOne({ user : user._id}).select("charactersFound").lean();
+  // Check if userStatus exists for the logged-in user
+  const userStatus = await UserStatusModel.findOne({ user: user._id }).select("charactersFound").lean();
 
+  const charArr = userStatus ? userStatus.charactersFound : null;
 
   const options = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-  }
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  };
 
   res
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json({message : "User logged In Successfully", user : loggedInUser, charArr : charArr.charactersFound})
+    .json({ message: "User logged In Successfully", user: loggedInUser, charArr });
+});
 
-})
 
 
 
