@@ -41,6 +41,7 @@ const isCharacterFound = asyncHandler(
         const { divTop, divLeft, radius, character, timeTaken } = req.body;
         try {
             const user = req.user;
+            console.log(req.body);
             
             if(!user){
                 res.status(500).json({ message : "User not valid"})
