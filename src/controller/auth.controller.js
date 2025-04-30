@@ -1,40 +1,9 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import { validationResult, check } from "express-validator";
+import { validationResult } from "express-validator";
 import bcrypt from 'bcryptjs'
 import userModel from "../models/user.model.js";
 import UserStatusModel from "../models/userStatus.model.js";
 
-// Define validation rules
-export const signupValidation = [
-  check('username')
-    .trim()
-    .notEmpty().withMessage('Username is required')
-    .isLength({ min: 3 }).withMessage('Username must be at least 3 characters long')
-    .isLength({ max: 30 }).withMessage('Username cannot exceed 30 characters')
-    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, and underscores')
-    .custom(async (value) => {
-      const existingUser = await userModel.findOne({ username: value });
-      if (existingUser) {
-        throw new Error('Username already exists');
-      }
-      return true;
-    }),
-  check('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
-    .matches(/[A-Z]/).withMessage('Password must contain at least one uppercase letter')
-    .matches(/[a-z]/).withMessage('Password must contain at least one lowercase letter')
-    .matches(/[0-9]/).withMessage('Password must contain at least one number')
-    .matches(/[!@#$%^&*(),.?":{}|<>]/).withMessage('Password must contain at least one special character')
-];
-
-export const loginValidation = [
-  check('username')
-    .trim()
-    .notEmpty().withMessage('Username is required'),
-  check('password')
-    .notEmpty().withMessage('Password is required')
-];
 
 const generateAccessAndRefereshTokens = async(userId, res) =>{
   try {
@@ -55,96 +24,147 @@ const generateAccessAndRefereshTokens = async(userId, res) =>{
 
 
 const signUpPost = asyncHandler(
-    
-    async (req, res) => {
-      const errors = validationResult(req);
-      if(!errors.isEmpty()){
-        return res.status(400).json({ errors: errors.array() });
-      }
-      
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (errors.isEmpty()) {
       try {
         const { username, password } = req.body;
-        
-        bcrypt.hash(password, 10, async(err, hashedPassword) => {
-          if(err){
+
+        if (!username) {
+          return res.status(400).json({ error: "Username is required" });
+        }
+
+        if (!password) {
+          return res.status(400).json({ error: "Password is required" });
+        }
+
+        // Username regex: only letters, numbers, underscores; 3-20 characters
+        const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+        if (!usernameRegex.test(username)) {
+          return res.status(400).json({ error: "Invalid username format" });
+        }
+
+        // Password regex: min 8 chars, at least one letter and one number
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        if (!passwordRegex.test(password)) {
+          return res.status(400).json({
+            error:
+              "Password must be at least 8 characters long and contain both letters and numbers",
+          });
+        }
+
+        // Check if username already exists
+        const existingUser = await userModel.findOne({ username });
+        if (existingUser) {
+          return res.status(400).json({ error: "Username already exists" });
+        }
+
+        bcrypt.hash(password, 10, async (err, hashedPassword) => {
+          if (err) {
             throw err;
           } else {
-             const user = new userModel({
-                username : username,
-                password: hashedPassword
+            const user = new userModel({
+              username: username,
+              password: hashedPassword,
             });
             await user.save();
-            
-            res.status(201).json({ message : "User created Successfully" });
+            res.status(201).json({ message: "User created successfully" });
           }
         });
-    
-      } catch(err) {
-        res.status(500).json({ error: "Unable to create User" });
+      } catch (err) {
+        res.status(500).json({ error: "Unable to create user" });
       }
+    } else {
+      res.status(400).json({ error: "Validation error", details: errors.array() });
     }
-  
-)
+  }
+);
 
 
 
 //login part
 
-
 const loginUser = asyncHandler(async (req, res) => {
-  const errors = validationResult(req);
-  if(!errors.isEmpty()){
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   try {
     const { username, password } = req.body;
-  
+
+    if (!username) {
+      return res.status(400).json({ error: "Username is required" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+
+    // Regex validation
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      return res.status(400).json({ error: "Invalid username format" });
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        error:
+          "Password must be at least 8 characters long and contain both letters and numbers",
+      });
+    }
+
     const user = await userModel.findOne({ username });
-  
     if (!user) {
       return res.status(400).json({ error: "User not found" });
     }
-  
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
-  
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Password is incorrect" });
     }
-  
-    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id, res);
-  
-    const loggedInUser = await userModel.findById(user._id).select("-password -refreshToken");
-  
-    // Check if userStatus exists for the logged-in user
-      let userStatus = await UserStatusModel.findOne({ user: user._id });
-      if(!userStatus){
-        userStatus = new UserStatusModel({ 
-          user: user._id, 
-          charactersFound: [], 
-          timeOfCompletion : 0,
-          isOver : false});
-      }
-    
-      await userStatus.save();
 
-    const charArr = userStatus && userStatus.charactersFound ? userStatus.charactersFound : [];
-  
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+      user._id,
+      res
+    );
+
+    const loggedInUser = await userModel
+      .findById(user._id)
+      .select("-password -refreshToken");
+
+    let userStatus = await UserStatusModel.findOne({ user: user._id });
+    if (!userStatus) {
+      userStatus = new UserStatusModel({
+        user: user._id,
+        charactersFound: [],
+        timeOfCompletion: 0,
+        isOver: false,
+      });
+    }
+
+    await userStatus.save();
+
+    const charArr = userStatus?.charactersFound || [];
+
     const options = {
       httpOnly: true,
       secure: true,
       sameSite: "none",
     };
-  
+
     res
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json({ message: "User logged In Successfully", user: loggedInUser, charArr : charArr });
+      .json({
+        message: "User logged in successfully",
+        user: loggedInUser,
+        charArr: charArr,
+      });
   } catch (error) {
-    res.status(400).json({ message : "unable to login user" })
+    res.status(400).json({ message: "Unable to login user" });
   }
 });
+
+
+
 
 
 
