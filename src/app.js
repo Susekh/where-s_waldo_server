@@ -12,10 +12,6 @@ import dotenv from 'dotenv';
 const app = Express();
 
 
-
-
-
-
 dotenv.config();
 
 // Middlewares
@@ -39,3 +35,5 @@ app.use("/auth", userRouter);
 app.use("/", leaderBoardRouter);
 
 export {app}
+
+
