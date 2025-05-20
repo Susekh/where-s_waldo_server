@@ -1,44 +1,29 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import userStatusModel from "../models/userStatus.model.js";
 
-function isPointInsideCircularDiv( divTop, divLeft, radius, character) {
-    let pointX;
-    let pointY;
-    //check character
-    switch(character){
-        case "WALDO" :
-            pointX = 900;
-            pointY = 350;
-            break
-        case "WIZARD" : 
-            pointX = 395;
-            pointY = 330;
-            break
-        case "ODLAW" :
-            pointX = 158;
-            pointY = 333;
-            break
-        case "WENDA" :
-            pointX = 1124;
-            pointY = 380;
-            break
-    }
-    // Calculate the center of the circular div
-    
-    const centerX = divLeft + radius / 2;
-    const centerY = divTop + radius / 2;
+function isCellCorrect(cellId, character) {
+  // Define arrays of valid cell IDs for each character
+  const correctCells = {
+    WALDO: [133, 153],   
+    WIZARD: [126],
+    ODLAW: [123],
+    WENDA: [136,156],
+  };
 
-    // Calculate the distance between the point and the center of the circular div
-    const distance = Math.sqrt(Math.pow(pointX - centerX, 2) + Math.pow(pointY - centerY, 2));
+  const validCells = correctCells[character];
 
-    // Check if the distance is less than or equal to the radius of the circular div
-    return distance <= radius / 2;
-  }
+  // Safety check for unknown characters
+  if (!validCells) return false;
+
+  // Check if the clicked cell is one of the valid cells
+  return validCells.includes(cellId);
+}
+
 
 
 const isCharacterFound = asyncHandler(
     async(req, res) => {
-        const { divTop, divLeft, radius, character, timeTaken } = req.body;
+        const { cellId, character, timeTaken } = req.body;
         try {
             const user = req.user;
             console.log(req.body);
@@ -57,7 +42,7 @@ const isCharacterFound = asyncHandler(
                 isOver : false});
             }
 
-            const isCorrect = isPointInsideCircularDiv(divTop, divLeft, radius, character)
+            const isCorrect = isCellCorrect(cellId, character)
             const IsCharInside = userStatus.charactersFound.includes(character);
 
 
