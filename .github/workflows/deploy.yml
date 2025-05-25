@@ -37,6 +37,10 @@ jobs:
     - name: Install Serverless Framework
       run: |
         npm install --save-dev serverless
+    
+    - name: Authenticate with Serverless Framework
+      run: |
+        echo "accessKey: ${{ secrets.SERVERLESS_ACCESS_KEY }}" > ~/.serverless/config.json
 
     - name: Deploy to AWS Lambda using Serverless
       run: |
