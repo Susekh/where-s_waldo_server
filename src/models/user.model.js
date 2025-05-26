@@ -13,7 +13,9 @@ const userSchema = new Schema({
     email : {
         type : String,
         required : [true, 'email is required'],
-    }
+    },
+    otp : String,
+    otpExpiry : Date,
 })
 
 
