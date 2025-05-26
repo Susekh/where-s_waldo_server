@@ -58,7 +58,7 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
       </div>
     `;
 
-    // Lambda-optimized: Await the email sending with proper error handling
+
     console.log(`Attempting to send OTP email to: ${user.email}`);
     
     const emailResult = await sendMail(
