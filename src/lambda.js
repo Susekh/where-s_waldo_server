@@ -1,7 +1,7 @@
 import serverlessExpress from '@codegenie/serverless-express';
 import { app } from './app.js';
 import connectDB from './db/index.js';
-import { createTransporter } from './mailer.js';
+import { createTransporter } from './utils/mailSender.js';
 
 let isDBConnected = false;
 let isMailerInitialized = false;
@@ -27,6 +27,7 @@ function initializeMailer() {
 }
 
 export const handler = async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   try {
     await initializeDB();
     initializeMailer();
