@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 // Create transporter instance outside the function for reuse
 let transporter;
 
-export const createTransporter = () => {
+const createTransporter = () => {
   if (!transporter) {
     transporter = nodemailer.createTransport({
       service: "gmail",
@@ -11,8 +11,7 @@ export const createTransporter = () => {
         user: process.env.NODEMAILER_USER,
         pass: process.env.NODEMAILER_PASS,
       },
-      // Lambda-specific optimizations
-      pool: false, // Disable connection pooling for Lambda
+      pool: false,
       maxConnections: 1,
       maxMessages: 1,
       connectionTimeout: 10000, // 10 seconds
