@@ -28,6 +28,7 @@ app.use(cookieParser());
 
 
 
+
 //routes
 app.get("/status", (req, res) => {res.json({ message : "server is working" })})
 app.use("/gameLogics", gameLogicsRoute);

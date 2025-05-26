@@ -1,7 +1,7 @@
-import sendMail from "../utils/mailSender.js";
 import User from "../models/user.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import bcrypt from "bcryptjs/dist/bcrypt.js";
+import { sendEmail } from "../utils/sendMail.js";
 
 export const handleForgotPassword = asyncHandler(async (req, res) => {
   const { username } = req.body;
@@ -61,7 +61,7 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
 
     console.log(`Attempting to send OTP email to: ${user.email}`);
     
-    const emailResult = await sendMail(
+    const emailResult = await sendEmail(
       user.email, 
       "Find waldo - Verification Code", 
       htmlContent
