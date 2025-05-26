@@ -3,14 +3,13 @@ import nodemailer from 'nodemailer'
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: "subhranshukhilar@gmail.com",
-      pass: "otyp vern ywre itdg",
+      user: process.env.NODEMAILER_USER,
+      pass: process.env.NODEMAILER_PASS,
     },
 });
 
 const sendMail = async (to, subject, html) => {
     try {
-        console.log("Email to be Sent at ::", to);
         
         const info = await transporter.sendMail({
             from: '"Subhranshu Sekhar Khilar" <subhranshukhilar@gmail.com>', 
@@ -18,8 +17,6 @@ const sendMail = async (to, subject, html) => {
             subject: subject, 
             html : html
           });
-
-        console.log("Message sent: %s", info);
 
         
     } catch (error) {
