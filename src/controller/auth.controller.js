@@ -1,35 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import { body, validationResult } from "express-validator";
 import bcrypt from 'bcryptjs';
 import userModel from "../models/user.model.js";
 import UserStatusModel from "../models/userStatus.model.js";
-
-// Validation rules
-export const signupValidationRules = [
-  body('username')
-    .notEmpty().withMessage('Username is required')
-    .isLength({ min: 3, max: 20 }).withMessage('Username must be between 3 and 20 characters')
-    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, and underscores'),
-  
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
-    .matches(/\d/).withMessage('Password must contain at least one number')
-    .matches(/[a-zA-Z]/).withMessage('Password must contain at least one letter')
-];
-
-export const loginValidationRules = [
-  body('username')
-    .notEmpty().withMessage('Username is required')
-    .isLength({ min: 3, max: 20 }).withMessage('Username must be between 3 and 20 characters')
-    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, and underscores'),
-  
-  body('password')
-    .notEmpty().withMessage('Password is required')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
-    .matches(/\d/).withMessage('Password must contain at least one number')
-    .matches(/[a-zA-Z]/).withMessage('Password must contain at least one letter')
-];
 
 const generateAccessAndRefereshTokens = async(userId) => {
   try {
@@ -51,22 +23,20 @@ const generateAccessAndRefereshTokens = async(userId) => {
 };
 
 const signUpPost = asyncHandler(async (req, res) => {
-  // Check validation results
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      error: "Validation failed", 
-      details: errors.array() 
-    });
-  }
 
   try {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     // Check if username already exists
     const existingUser = await userModel.findOne({ username });
     if (existingUser) {
-      return res.status(409).json({ error: "Username already exists" });
+      return res.status(409).json({ success : false , error: "Username already exists" });
+    };
+    
+    //check if email already exists
+    const existingEmail = await userModel.findOne({email});
+    if(existingEmail) {
+      return res.status(409).json({ success : false, error: "Email already exists" });
     }
 
     // Hash password and create user
@@ -75,7 +45,8 @@ const signUpPost = asyncHandler(async (req, res) => {
     
     const user = new userModel({
       username,
-      password: hashedPassword
+      password: hashedPassword,
+      email
     });
     
     await user.save();
@@ -87,21 +58,13 @@ const signUpPost = asyncHandler(async (req, res) => {
   } catch (err) {
     console.error("Signup error:", err);
     return res.status(500).json({ 
-      error: "Unable to create user", 
+      error: "Unable to create user",
       message: err.message 
     });
   }
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  // Check validation results
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      error: "Validation failed", 
-      details: errors.array() 
-    });
-  }
 
   try {
     const { username, password } = req.body;
@@ -179,7 +142,7 @@ const logout = asyncHandler(async(req, res) => {
       req.user._id,
       {
         $unset: {
-          refreshToken: 1 // Removes the field from document
+          refreshToken: 1 
         }
       },
       { new: true }

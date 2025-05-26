@@ -29,7 +29,7 @@ app.use(cookieParser());
 
 
 //routes
-app.get("/test", (req, res) => {res.json({ message : "server is working" })})
+app.get("/status", (req, res) => {res.json({ message : "server is working" })})
 app.use("/gameLogics", gameLogicsRoute);
 app.use("/auth", userRouter);
 app.use("/", leaderBoardRouter);
