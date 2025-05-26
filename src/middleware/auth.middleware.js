@@ -28,7 +28,6 @@ export const verifyJWT = asyncHandler(async(req, res, next) => {
 })
 
 export const validateSignup = asyncHandler(async(req, res, next) => {
-  console.log("=== VALIDATE SIGNUP START ===");
   const { username, password, email } = req.body;
   console.log("Request body:", req.body);
   console.log("Username:", username);
@@ -36,18 +35,15 @@ export const validateSignup = asyncHandler(async(req, res, next) => {
   console.log("email:", email);
 
   // Username validation
-  console.log("Checking username length...");
   if (!username || !validator.isLength(username.trim(), { min: 3, max: 20 })) {
-    console.log("Username length failed");
     return res.status(400).json({
       success: false,
       error : 'Username must be 3-20 characters'
     });
-  }
+  };
 
-  console.log("Checking username alphanumeric...");
+
   if (!validator.isAlphanumeric(username.trim().replace(/_/g, ''))) {
-    console.log("Username alphanumeric failed");
     return res.status(400).json({
       success: false,
       error : 'Username: only letters, numbers, underscore allowed'
@@ -55,7 +51,6 @@ export const validateSignup = asyncHandler(async(req, res, next) => {
   }
 
   // Check if username exists
-  console.log("Checking if username exists...");
   const existingUser = await User.findOne({ username: username.trim() });
   if (existingUser) {
     console.log("Username already exists");
@@ -66,16 +61,13 @@ export const validateSignup = asyncHandler(async(req, res, next) => {
   }
 
   // Password validation
-  console.log("Checking password length...");
   if (!password || !validator.isLength(password, { min: 8 })) {
-    console.log("Password length failed");
     return res.status(400).json({
       success: false,
       error : 'Password must be at least 8 characters'
     });
   }
 
-  console.log("Checking password strength...");
   if (!validator.isStrongPassword(password, {
     minLength: 8,
     minLowercase: 1,
@@ -83,7 +75,6 @@ export const validateSignup = asyncHandler(async(req, res, next) => {
     minNumbers: 1,
     minSymbols: 0
   })) {
-    console.log("Password strength failed");
     return res.status(400).json({
       success: false,
       error : 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
@@ -97,7 +88,6 @@ export const validateSignup = asyncHandler(async(req, res, next) => {
     })
   }
 
-  console.log("=== VALIDATION PASSED, CALLING NEXT ===");
   next();
 });
 
