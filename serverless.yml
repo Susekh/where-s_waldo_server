@@ -6,7 +6,7 @@ provider:
 
 functions:
   find-waldo:
-    handler: src/lambda.handler 
+    handler: dist/lambda.handler 
     events:
       - httpApi: "*"
 
@@ -15,4 +15,4 @@ plugins:
   - serverless-express 
 custom:
   serverless-express:
-    find-waldo: ./src/lambda.js  
+    find-waldo: ./dist/lambda.js  

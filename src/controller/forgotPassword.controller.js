@@ -89,7 +89,7 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
       email: user.email
     });
 
-    // Clean up OTP if email fails (optional - depends on your business logic)
+    // Clean up OTP if email fails
     user.otp = undefined;
     user.otpExpiry = undefined;
     await user.save();
