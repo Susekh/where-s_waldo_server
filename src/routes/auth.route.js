@@ -11,6 +11,6 @@ router.use("/forgot-password", forgetPasswordRouter);
 router.get("/log-out", verifyJWT, logout);
 router.get("/isAuthenticated", verifyJWT, (req, res) => {
     res.status(200).json({ message: "User is Authenticated." })
-} )
+});
 
 export default router;

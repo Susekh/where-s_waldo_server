@@ -61,11 +61,11 @@ export const handleForgotPassword = asyncHandler(async (req, res) => {
 
     console.log(`Attempting to send OTP email to: ${user.email}`);
     
-    const emailResult = await sendEmail(
-      user.email, 
-      "Find waldo - Verification Code", 
-      htmlContent
-    );
+    const emailResult = await sendEmail({
+      to : user.email, 
+      subject : "Find waldo - Verification Code", 
+      html : htmlContent
+  });
 
     console.log('Email sent successfully:', emailResult);
 
